@@ -10,7 +10,7 @@ class piece:
            self.own, self.oppos = -1, 1
        self.current_pos = current_pos
     def __str__(self):
-        return 'white' if self.own == 1 else 'black'
+        return ''
     def get_valid_moves():
         return []
     
@@ -19,8 +19,9 @@ class pawn(piece):
     def __init__(self, color, current_pos):
         super().__init__(color, current_pos)
         self.has_moved = False
+
     def __str__(self):
-        return ('white' if self.own == 1 else 'black') + 'p'
+        return ''
     def get_valid_moves(self, board_map):
         row, col = self.current_pos[0], self.current_pos[1]
         moves = []
@@ -44,7 +45,7 @@ class pawn(piece):
             move.is_capture = True
             moves.append(move)
             
-        if col-1 > 0\
+        if col-1 >= 0\
             and board_map[row+self.oppos, col-1] == self.oppos:
             move = self.initialize_pawn_move(board_map)
             move.new_pos = (row+self.oppos, col-1)
@@ -74,6 +75,8 @@ class rook(piece):
         move.piece_type = rook
         move.current_pos = self.current_pos
         return move
+    def __str__(self):
+        return 'R'
         
 class queen(piece):
     def __init__(self, color, current_pos):
@@ -88,6 +91,8 @@ class queen(piece):
         move.piece_type = rook
         move.current_pos = self.current_pos
         return move
+    def __str__(self):
+        return 'Q'
 
 class king(piece):
     def __init__(self, color, current_pos):
@@ -102,7 +107,8 @@ class king(piece):
         move.piece_type = rook
         move.current_pos = self.current_pos
         return move
-        
+    def __str__(self):
+        return 'K'
 
 class knight(piece):
     def __init__(self, color, current_pos):
@@ -117,6 +123,8 @@ class knight(piece):
         move.piece_type = rook
         move.current_pos = self.current_pos
         return move
+    def __str__(self):
+        return 'N'
 
 class bishop(piece):
     def __init__(self, color, current_pos):
@@ -131,6 +139,8 @@ class bishop(piece):
         move.piece_type = rook
         move.current_pos = self.current_pos
         return move
+    def __str__(self):
+        return 'B'
         
 class king(piece):
     def __init__(self, color, current_pos):
@@ -145,4 +155,6 @@ class king(piece):
         move.piece_type = rook
         move.current_pos = self.current_pos
         return move
+    def __str__(self):
+        return 'K'
         
