@@ -19,6 +19,6 @@ class Move:
             #ans = ans & self.current_pos
             ans = ans & (self.is_promotion == other.is_promotion)
             ans = ans & (self.promoted_piece == other.promoted_piece)
-            ans = ans & (self.is_enpassant == other.is_enpassant)
+            # ans = ans & (self.is_enpassant == other.is_enpassant)
             ans = ans & (self.is_capture == other.is_capture)
         return ans
