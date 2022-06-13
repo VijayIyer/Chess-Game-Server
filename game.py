@@ -73,13 +73,15 @@ def infer_move(move_notation, turn):
             move.new_pos = (0, 2)
 
     # region determining prev column
+    move.current_pos = (None, None)
     old_row, old_col = None, None
     if m_dict['amb'] != '':
         if m_dict['amb'] in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']:
-            old_row = 104 - ord(m_dict['amb'])
+            old_col = 8 - (104 - ord(m_dict['amb'])) - 1
         elif m_dict['amb'] in ['1', '2', '3', '4', '5', '6', '7', '8']:
-            old_col = int(m_dict['amb']) - 1
+            old_row = 8 - int(m_dict['amb'])
         move.current_pos = (old_row, old_col)
+        print(move.current_pos)
     # endregion
 
     # region determining move type
@@ -99,7 +101,7 @@ def infer_move(move_notation, turn):
             move.promoted_piece = bishop
 
     move.new_pos = 8 - int(m_dict['newrow']), 8 - (104 - ord(m_dict['newcol'])) - 1
-
+    print('move inferred')
     return move
 
 
@@ -131,14 +133,19 @@ def is_move_valid(move, cur_pieces, opp_pieces, board_map):
     selected_move = None
     for piece in valid_pieces:
         possible_moves = piece.get_valid_moves(board_map)
+        #print('\n{}:'.format(piece.current_pos))
         for possible_move in possible_moves:
+            #print('{}'.format(possible_move.new_pos))
             if possible_move.is_enpassant:
                 print("checking en_passant...")
                 if not is_enpassant_valid(possible_move, opp_pieces, board_map):
                     print("exiting en_passant check")
                     continue
             if move == possible_move:
+                print(move.current_pos)
                 candidate_moves.append(possible_move)
+    for move in candidate_moves:
+        print('{}'.format(move.new_pos))
     if len(candidate_moves) == 1:
         selected_move = move
         selected_move.current_pos = candidate_moves[0].current_pos
@@ -253,12 +260,14 @@ class Game:
         # move_notation = input("\nenter your move:")
         move = infer_move(move_notation, self.turn)
         selected_move = is_move_valid(move, cur_pieces, opp_pieces, self.board_map)
+        print('move selected')
         if selected_move is not None:
             self.current_game += move_notation + " "
             update_board(selected_move, cur_pieces, opp_pieces, self.board_map, self.turn)
             self.turn = update_turn(self.turn)
             self.is_invalid_move = False
         else:
+            print('invalid move')
             self.is_invalid_move = True
 
     def get_status(self):
@@ -286,53 +295,54 @@ class Player:
 
 
 
-def start_game(player1, player2, board_map):
-    
+# def start_game(player1, player2, board_map):
+#
+#
+#     while True:
+#         if turn == 0:
+#             cur_pieces = player1.pieces
+#             opp_pieces = player2.pieces
+#
+#             # next turn in notational terms
+#             current_game += " {}.".format(move_no)
+#             move_no += 1
+#
+#         elif turn == 1:
+#             cur_pieces = player2.pieces
+#             opp_pieces = player1.pieces
+#
+#         move_notation = input("\nenter your move:")
+#         move = infer_move(move_notation, turn)
+#         selected_move = is_move_valid(move, cur_pieces, opp_pieces, board_map)
+#         print('move selected')
+#         if selected_move is not None:
+#             current_game += move_notation + " "
+#             update_board(move, cur_pieces, opp_pieces, board_map, turn)
+#             request = json.dumps(get_positions(cur_pieces + opp_pieces))
+#         else:
+#             print('\n ---- invalid move ----')
+#         turn = update_turn(turn)
+#
+#         option = input("\ndo you want to continue? [y/n]")
+#         if (option != "y"): break
+#     print(current_game)
+#     print(board_map)
 
-    while True:
-        if turn == 0:
-            cur_pieces = player1.pieces
-            opp_pieces = player2.pieces
 
-            # next turn in notational terms
-            current_game += " {}.".format(move_no)
-            move_no += 1
-
-        elif turn == 1:
-            cur_pieces = player2.pieces
-            opp_pieces = player1.pieces
-
-        move_notation = input("\nenter your move:")
-        move = infer_move(move_notation, turn)
-        selected_move = is_move_valid(move, cur_pieces, opp_pieces, board_map)
-        if selected_move is not None:
-            current_game += move_notation + " "
-            update_board(move, cur_pieces, opp_pieces, board_map, turn)
-            request = json.dumps(get_positions(cur_pieces + opp_pieces))
-        else:
-            print('\n ---- invalid move ----')
-        turn = update_turn(turn)
-
-        option = input("\ndo you want to continue? [y/n]")
-        if (option != "y"): break
-    print(current_game)
-    print(board_map)
-
-
-def initialize_players(board_conf):
-    player1 = Player("white")
-    player2 = Player("black")
-    board_map = np.zeros((8, 8))
-    pieces = [create_piece_per_conf(line) for line in board_conf]
-    for piece in pieces:
-        if piece.own == 1:
-            player1.add_piece(piece)
-            board_map[piece.current_pos[0], piece.current_pos[1]] = 1
-
-        else:
-            player2.add_piece(piece)
-            board_map[piece.current_pos[0], piece.current_pos[1]] = -1
-    return player1, player2, board_map
+# def initialize_players(board_conf):
+#     player1 = Player("white")
+#     player2 = Player("black")
+#     board_map = np.zeros((8, 8))
+#     pieces = [create_piece_per_conf(line) for line in board_conf]
+#     for piece in pieces:
+#         if piece.own == 1:
+#             player1.add_piece(piece)
+#             board_map[piece.current_pos[0], piece.current_pos[1]] = 1
+#
+#         else:
+#             player2.add_piece(piece)
+#             board_map[piece.current_pos[0], piece.current_pos[1]] = -1
+#     return player1, player2, board_map
 
 
 if __name__ == "__main__":

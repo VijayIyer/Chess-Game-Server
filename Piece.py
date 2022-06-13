@@ -81,13 +81,73 @@ class rook(piece):
         return ('white' if self.own == 1 else 'black') + 'p'
 
     def get_valid_moves(self, board_map):
-        return []
+        row, col = self.current_pos[0], self.current_pos[1]
+        moves = []
+        i = 1
+        while col+i < board_map.shape[1]:
+            if board_map[row, col + i] != self.own:
+                move = self.add_move(board_map, (row, col + i))
+                if move is not None:
+                    moves.append(move)
+                if board_map[row, col+i] == self.oppos:
+                    break
+                i += 1
+            else:
+                break
+        i = 1
+        while col-i >= 0:
+            if board_map[row, col - i] != self.own:
+                move = self.add_move(board_map, (row, col - i))
+                if move is not None:
+                    moves.append(move)
+                if board_map[row, col-i] == self.oppos:
+                    break
+                i += 1
+            else:
+                break
+        i = 1
+        while row+i < board_map.shape[0]:
+            if board_map[row + i, col] != self.own:
+                move = self.add_move(board_map, (row + i, col))
+                if move is not None:
+                    moves.append(move)
+                if board_map[row + i, col] == self.oppos:
+                    break
+                i += 1
 
-    def initialize_pawn_move(self, board_map):
+            else:
+                break
+        i = 1
+        while row - i >= 0:
+            if board_map[row - i, col] != self.own:
+                move = self.add_move(board_map, (row - i, col))
+                if move is not None:
+                    moves.append(move)
+                if board_map[row - i, col] == self.oppos:
+                    break
+                i += 1
+            else:
+                break
+        return moves
+
+    def initialize_rook_move(self, board_map):
         move = Move()
         move.piece_type = rook
         move.current_pos = self.current_pos
         return move
+
+    def add_move(self, board_map, new_pos):
+        row, col = new_pos[0], new_pos[1]
+        if (0 < row < board_map.shape[0]) and (0 < col < board_map.shape[1]) \
+                and board_map[row, col] != self.own:
+            move = self.initialize_rook_move(board_map)
+            move.new_pos = (row, col)
+            if board_map[row, col] == self.oppos:
+                move.is_capture = True
+
+            return move
+        else:
+            return None
 
     def __str__(self):
         return 'R'
@@ -145,7 +205,7 @@ class knight(piece):
 
     def add_move(self, board_map, new_pos):
         row, col = new_pos[0], new_pos[1]
-        if (0 < row < board_map.shape[0]) and (0 < col < board_map.shape[1])\
+        if (0 < row < board_map.shape[0]) and (0 < col < board_map.shape[1]) \
                 and board_map[row, col] != self.own:
             move = self.initialize_knight_move(board_map)
             move.new_pos = (row, col)
