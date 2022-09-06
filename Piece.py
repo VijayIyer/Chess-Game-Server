@@ -315,8 +315,40 @@ class king(piece):
         move = self.add_move(board_map, (self.current_pos[0], self.current_pos[1] + 1))
         if move is not None:
             moves.append(move)
-
+        if self.castling_possible(move):
+            move = self.add_move(board_map, (self.current_pos[0], self.current_pos[1]+2))
+            move.is_castling = True
+            moves.append(move)
+        if self.long_castling_possible(move):
+            move = self.add_move(board_map, (self.current_pos[0], self.current_pos[1]-3))
+            moves.append(move)
+            move.is_longcastling = True
         return moves
+
+    def castling_possible(self, move):
+        # piece is white
+        if self.own == 1:
+            # piece is in king's original position
+            if move.current_pos == (7, 3) and not self.has_moved:
+                return True
+        # piece is black
+        if self.own == 1:
+            if move.current_pos == (0, 3) and not self.has_moved:
+                return True
+
+        return False
+
+    def long_castling_possible(self, move):
+        # piece is white
+        if self.own == 1:
+            # piece is in king's original position
+            if move.current_pos == (7, 3) and not self.has_moved:
+                return True
+        # piece is black
+        if self.own == 1:
+            if move.current_pos == (0, 3) and not self.has_moved:
+                return True
+        return True
 
     def initialize_king_move(self, board_map):
         move = Move()

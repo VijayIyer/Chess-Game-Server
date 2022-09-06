@@ -10,8 +10,8 @@ import logging
 
 # logging.basicConfig(filename='test.log',level=logging.DEBUG)
 turn = 0
-timer1 = 300
-timer2 = 300
+timer1 = 300 #5 minutes
+timer2 = 300 #5 minutes
 
 
 def update_turn(turn):
@@ -234,7 +234,7 @@ def get_king_pos(pieces):
     for pc in pieces:
         if type(pc) == king:
             return pc.current_pos
-    return (3, 3)
+    return (7, 3) # default white king pos
 
 
 class Game:
