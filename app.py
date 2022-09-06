@@ -4,15 +4,14 @@ from flask_cors import CORS
 import json
 from flask import request, json
 import game
-from game import Game,update_turn,update_board, infer_move,\
-    create_piece_per_conf,\
+from game import Game, update_turn, update_board, infer_move, \
+    create_piece_per_conf, \
     get_positions, get_possible_moves
 
 app = Flask(__name__)
 CORS(app)
 
 ongoing_game = Game()
-
 
 
 @app.route('/')
@@ -23,7 +22,8 @@ def start():
     ongoing_game.initialize_players(board_conf)
     return "Board Initialized!"
 
-@app.route('/move', methods = ["POST"])
+
+@app.route('/move', methods=["POST"])
 def make_move():
     move = request.get_json()['move']
     print(move)
@@ -33,12 +33,17 @@ def make_move():
     else:
         return make_response(json.jsonify(ongoing_game.get_status()), 200)
 
+
 @app.route('/positions')
 def get_positions():
-    
-    return json.jsonify(board = ongoing_game.get_positions())
+    return json.jsonify(board=ongoing_game.get_positions())
+
 
 @app.route('/board')
 def view_board():
     print(ongoing_game.board_map)
     return json.jsonify(ongoing_game.board_map.tolist())
+
+
+if __name__ == "__main__":
+    app.run(debug=True)

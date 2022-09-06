@@ -1,0 +1,18 @@
+INFO:werkzeug: * Running on http://127.0.0.1:5000 (Press CTRL+C to quit)
+INFO:werkzeug:127.0.0.1 - - [09/Jul/2022 19:10:51] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Jul/2022 19:10:59] "GET /positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Jul/2022 19:11:05] "OPTIONS /move HTTP/1.1" 200 -
+DEBUG:root:<class 'Piece.pawn'> to move from (None, None) to (4, 4)
+DEBUG:root:(4, 4)
+INFO:werkzeug:127.0.0.1 - - [09/Jul/2022 19:11:05] "POST /move HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Jul/2022 19:11:05] "GET /positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Jul/2022 19:11:07] "OPTIONS /move HTTP/1.1" 200 -
+DEBUG:root:<class 'Piece.pawn'> to move from (None, None) to (3, 3)
+DEBUG:root:(3, 3)
+INFO:werkzeug:127.0.0.1 - - [09/Jul/2022 19:11:07] "POST /move HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Jul/2022 19:11:07] "GET /positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Jul/2022 19:11:10] "OPTIONS /move HTTP/1.1" 200 -
+DEBUG:root:<class 'Piece.pawn'> to move from (None, None) to (4, 3)
+DEBUG:root:(4, 3)
+INFO:werkzeug:127.0.0.1 - - [09/Jul/2022 19:11:10] "POST /move HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Jul/2022 19:11:10] "GET /positions HTTP/1.1" 200 -

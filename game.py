@@ -6,11 +6,13 @@ import re
 import copy
 import sys
 import json
+import logging
 
-
+# logging.basicConfig(filename='test.log',level=logging.DEBUG)
 turn = 0
 timer1 = 300
 timer2 = 300
+
 
 def update_turn(turn):
     return 1 if turn == 0 else 0
@@ -37,6 +39,7 @@ def infer_move(move_notation, turn):
 
     move = Move()
     move.piece_type = pawn
+
     # region determining piece type
     if m_dict['piece'] != '':
         if m_dict['piece'] == 'R':
@@ -81,7 +84,7 @@ def infer_move(move_notation, turn):
         elif m_dict['amb'] in ['1', '2', '3', '4', '5', '6', '7', '8']:
             old_row = 8 - int(m_dict['amb'])
         move.current_pos = (old_row, old_col)
-        print(move.current_pos)
+
     # endregion
 
     # region determining move type
@@ -101,7 +104,7 @@ def infer_move(move_notation, turn):
             move.promoted_piece = bishop
 
     move.new_pos = 8 - int(m_dict['newrow']), 8 - (104 - ord(m_dict['newcol'])) - 1
-    print('move inferred')
+    # logging.debug('{} to move from {} to {}'.format(move.piece_type, move.current_pos, move.new_pos))
     return move
 
 
@@ -113,8 +116,8 @@ def is_enpassant_valid(possible_move, opp_pieces, board_map):
     else:
         own = -1
         oppos = 1
-    new_row, new_col = possible_move.new_pos[0],possible_move.new_pos[1]
-    print("checking for {},{} to be captured".format(new_row, new_col))
+    new_row, new_col = possible_move.new_pos[0], possible_move.new_pos[1]
+    # logging.debug("checking for {},{} to be captured".format(new_row, new_col))
     if board_map[cur_row, new_col] != oppos:
         return False
     piece_to_be_captured = None
@@ -125,33 +128,37 @@ def is_enpassant_valid(possible_move, opp_pieces, board_map):
     if piece_to_be_captured is None: return False
     return piece_to_be_captured.can_be_enpassanted
 
+
 def is_move_valid(move, cur_pieces, opp_pieces, board_map):
     is_valid = True
-    valid_pieces = cur_pieces
     valid_pieces = [pc for pc in cur_pieces if type(pc) == move.piece_type]
     candidate_moves = []
-    selected_move = None
     for piece in valid_pieces:
         possible_moves = piece.get_valid_moves(board_map)
-        #print('\n{}:'.format(piece.current_pos))
+        # print('\n{}:'.format(piece.current_pos))
         for possible_move in possible_moves:
-            #print('{}'.format(possible_move.new_pos))
+            # print('{}'.format(possible_move.new_pos))
             if possible_move.is_enpassant:
-                print("checking en_passant...")
+                #    print("checking en_passant...")
                 if not is_enpassant_valid(possible_move, opp_pieces, board_map):
-                    print("exiting en_passant check")
+                    #        print("exiting en_passant check")
                     continue
             if move == possible_move:
-                print(move.current_pos)
+                # print(move.current_pos)
                 candidate_moves.append(possible_move)
-    for move in candidate_moves:
-        print('{}'.format(move.new_pos))
+    #  for move in candidate_moves:
+    # logging.debug('{}'.format(move.new_pos))
     if len(candidate_moves) == 1:
         selected_move = move
         selected_move.current_pos = candidate_moves[0].current_pos
         if candidate_moves[0].is_enpassant:
             selected_move.is_enpassant = True
-    return selected_move
+        return selected_move
+    else:
+        # logging.debug('these are the final candidate moves')
+        # for move in candidate_moves:
+        # logging.debug(move.current_pos, move.new_pos)
+        return None
 
 
 def update_board(move, cur_pieces, opp_pieces, board_map, turn):
@@ -166,18 +173,18 @@ def update_board(move, cur_pieces, opp_pieces, board_map, turn):
     for piece in cur_pieces:
         if piece.current_pos == (curr_row, curr_col):
             piece.current_pos = new_row, new_col
-            if type(piece) == pawn and not piece.has_moved\
-                    and move.new_pos == (curr_row+2*oppos, curr_col):
+            if type(piece) == pawn and not piece.has_moved \
+                    and move.new_pos == (curr_row + 2 * oppos, curr_col):
                 piece.can_be_enpassanted = True
-                print("{}: {},{} can be en_passanted".format(own, new_row, new_col))
+                # print("{}: {},{} can be en_passanted".format(own, new_row, new_col))
             piece.has_moved = True
         elif type(piece) == pawn:
             piece.can_be_enpassanted = False
     if move.is_capture:
         for opp_piece in opp_pieces:
             if move.is_enpassant:
-                print("this move is en passant")
-                if opp_piece.current_pos == (new_row-oppos, new_col):
+                # print("this move is en passant")
+                if opp_piece.current_pos == (new_row - oppos, new_col):
                     opp_pieces.remove(opp_piece)
                     break
             if opp_piece.current_pos == (new_row, new_col):
@@ -223,6 +230,11 @@ def get_positions(pieces):
     return positions
 
 
+def get_king_pos(pieces):
+    for pc in pieces:
+        if type(pc) == king:
+            return pc.current_pos
+    return (3, 3)
 
 
 class Game:
@@ -234,6 +246,7 @@ class Game:
         self.move_no = 1
         self.current_game = ""
         self.is_invalid_move = False
+
     def initialize_players(self, board_conf):
         pieces = [create_piece_per_conf(line) for line in board_conf]
         for piece in pieces:
@@ -244,30 +257,55 @@ class Game:
             else:
                 self.player2.add_piece(piece)
                 self.board_map[piece.current_pos[0], piece.current_pos[1]] = -1
+
+    def get_squares_under_attack(self, valid_pieces):
+        squares_under_attack = []
+        for pc in valid_pieces:
+            for mv in pc.get_valid_moves(self.board_map):
+                if mv.new_pos not in squares_under_attack:
+                    squares_under_attack.append(mv.new_pos)
+        return squares_under_attack
+
     def make_move(self, move_notation):
         if self.turn == 0:
             cur_pieces = self.player1.pieces
             opp_pieces = self.player2.pieces
-
-            # next turn in notational terms
-            self.current_game += " {}.".format(self.move_no)
-            self.move_no += 1
+            current_player = self.player1
+            opp_player = self.player2
 
         elif self.turn == 1:
             cur_pieces = self.player2.pieces
             opp_pieces = self.player1.pieces
-
+            current_player = self.player2
+            opp_player = self.player1
         # move_notation = input("\nenter your move:")
         move = infer_move(move_notation, self.turn)
         selected_move = is_move_valid(move, cur_pieces, opp_pieces, self.board_map)
-        print('move selected')
+
         if selected_move is not None:
-            self.current_game += move_notation + " "
+
             update_board(selected_move, cur_pieces, opp_pieces, self.board_map, self.turn)
+            cur_squares_under_attack = self.get_squares_under_attack(cur_pieces)
+            opp_squares_under_attack = self.get_squares_under_attack(opp_pieces)
+            opp_king_pos = get_king_pos(opp_pieces)
+            curr_king_pos = get_king_pos(cur_pieces)
+            if opp_king_pos in cur_squares_under_attack:
+                opp_player.in_check = True
+                print("{} is in check".format(opp_player.color))
+            if curr_king_pos in opp_squares_under_attack:
+                print("invalid move since it puts self in check")
+                self.is_invalid_move = True
+                # revert board here
+                return
             self.turn = update_turn(self.turn)
             self.is_invalid_move = False
+            if self.turn == 1:
+                # next turn in notational terms
+                self.current_game += " {}.".format(self.move_no)
+                self.move_no += 1
+            self.current_game += move_notation + " "
         else:
-            print('invalid move')
+
             self.is_invalid_move = True
 
     def get_status(self):
@@ -275,12 +313,12 @@ class Game:
             return "invalid move"
 
         return self.current_game
+
     def get_board(self):
         return self.board_map
 
     def get_positions(self):
         return get_positions(self.player1.pieces + self.player2.pieces)
-
 
 
 class Player:
@@ -289,10 +327,10 @@ class Player:
     def __init__(self, color):
         self.color = color
         self.pieces = []
+        self.in_check = False
 
     def add_piece(self, piece):
         self.pieces.append(piece)
-
 
 
 # def start_game(player1, player2, board_map):
@@ -347,9 +385,9 @@ class Player:
 
 if __name__ == "__main__":
     pass
-    #print(sys.argv[1])
-    #board_conf_file = sys.argv[1]
-    #with open(board_conf_file, 'r') as f:
+    # print(sys.argv[1])
+    # board_conf_file = sys.argv[1]
+    # with open(board_conf_file, 'r') as f:
     #    board_conf = f.readlines()
-    #player1, player2, board_map = initialize_players(board_conf)
-    #start_game(player1, player2, board_map)
+    # player1, player2, board_map = initialize_players(board_conf)
+    # start_game(player1, player2, board_map)

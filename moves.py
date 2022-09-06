@@ -16,15 +16,15 @@ class Move:
             ans = ans & (self.is_castling == other.is_castling)
             ans = ans & (self.is_longcastling == other.is_longcastling)
             ans = ans & (self.new_pos == other.new_pos)
-            print(self.current_pos, other.current_pos)
+            #print(self.current_pos, other.current_pos)
             if self.current_pos != (None, None):
                 if self.current_pos[0] is not None:
                     if self.current_pos[0] != other.current_pos[0]:
-                        print('returning1')
+                        #print('returning1')
                         return False
                 if self.current_pos[1] is not None:
                     if self.current_pos[1] != other.current_pos[1]:
-                        print('returning2')
+                        #print('returning2')
                         return False
             #ans = ans & (self.current_pos == other.current_pos)
             ans = ans & (self.is_promotion == other.is_promotion)
