@@ -57,23 +57,34 @@ def infer_move(move_notation, turn):
     # endregion
     promoted_piece = None
     if m_dict['LongCastle'] is not None:
+        print('long castle')
         move.is_longcastling = True
+        move.piece_type = king
         if turn == 0:
+
             move.current_pos = (7, 4)
-            move.new_pos = (7, 6)
+            move.new_pos = (7, 1)
+            return move
         elif turn == 1:
             move.current_pos = (0, 4)
+            move.new_pos = (0, 1)
+            return move
 
-            move.new_pos = (0, 6)
     if m_dict['Castle'] is not None:
+        # print('castling move')
+        move.piece_type = king
         move.is_castling = True
         if turn == 0:
             move.current_pos = (7, 4)
-            move.new_pos = (7, 2)
+            move.new_pos = (7, 6)
+            # print('{}:{}'.format(move.current_pos, move.new_pos))
+            return move
 
         elif turn == 1:
             move.current_pos = (0, 4)
-            move.new_pos = (0, 2)
+            move.new_pos = (0, 6)
+            # print('{}:{}'.format(move.current_pos , move.new_pos))
+            return move
 
     # region determining prev column
     move.current_pos = (None, None)
@@ -134,15 +145,18 @@ def is_move_valid(move, cur_pieces, opp_pieces, board_map):
     valid_pieces = [pc for pc in cur_pieces if type(pc) == move.piece_type]
     candidate_moves = []
     for piece in valid_pieces:
+
+        # checking if the move is equal to any of the possible moves
         possible_moves = piece.get_valid_moves(board_map)
-        # print('\n{}:'.format(piece.current_pos))
+
         for possible_move in possible_moves:
-            # print('{}'.format(possible_move.new_pos))
+            #print('{}:{}'.format(possible_move.current_pos, possible_move.new_pos))
             if possible_move.is_enpassant:
                 #    print("checking en_passant...")
                 if not is_enpassant_valid(possible_move, opp_pieces, board_map):
                     #        print("exiting en_passant check")
                     continue
+
             if move == possible_move:
                 # print(move.current_pos)
                 candidate_moves.append(possible_move)
@@ -216,6 +230,7 @@ def create_piece_per_conf(piece_pos):
 
 
 def get_positions(pieces):
+    print(len(pieces))
     request = dict()
     positions = []
     for piece in pieces:
@@ -226,7 +241,7 @@ def get_positions(pieces):
         pos += ("W" if piece.own == 1 else "B")
         pos += str(piece)
         positions.append(pos)
-
+    print(positions)
     return positions
 
 
@@ -234,7 +249,8 @@ def get_king_pos(pieces):
     for pc in pieces:
         if type(pc) == king:
             return pc.current_pos
-    return (7, 3) # default white king pos
+
+    return (7, 4) # default white king pos
 
 
 class Game:
@@ -305,7 +321,7 @@ class Game:
                 self.move_no += 1
             self.current_game += move_notation + " "
         else:
-
+            print("move invalid")
             self.is_invalid_move = True
 
     def get_status(self):
