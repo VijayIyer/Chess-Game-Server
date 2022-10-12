@@ -205,6 +205,35 @@ def update_board(move, cur_pieces, opp_pieces, board_map, turn):
                 opp_pieces.remove(opp_piece)
                 break
 
+def revert_board(move, cur_pieces, opp_pieces, board_map, turn):
+    if turn == 0:
+        own, oppos = -1, 1
+    else:
+        own, oppos = 1, -1
+    curr_row, curr_col = move.new_pos
+    new_row, new_col = move.current_pos
+    board_map[curr_row, curr_col] = own
+    board_map[new_row, new_col] = 0
+    for piece in cur_pieces:
+        if piece.current_pos == (curr_row, curr_col):
+            piece.current_pos = new_row, new_col
+            if type(piece) == pawn and not piece.has_moved \
+                    and move.new_pos == (curr_row + 2 * oppos, curr_col):
+                piece.can_be_enpassanted = True
+                # print("{}: {},{} can be en_passanted".format(own, new_row, new_col))
+            piece.has_moved = True
+        elif type(piece) == pawn:
+            piece.can_be_enpassanted = False
+    if move.is_capture:
+        for opp_piece in opp_pieces:
+            if move.is_enpassant:
+                # print("this move is en passant")
+                if opp_piece.current_pos == (new_row - oppos, new_col):
+                    opp_pieces.remove(opp_piece)
+                    break
+            if opp_piece.current_pos == (new_row, new_col):
+                opp_pieces.remove(opp_piece)
+                break
 
 def create_piece_per_conf(piece_pos):
     piece_row, piece_col = 8 - int(piece_pos[1]), \

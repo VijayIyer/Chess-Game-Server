@@ -36,8 +36,6 @@ def make_move():
 
 @app.route('/positions')
 def get_positions():
-    print(len(ongoing_game.player1.pieces))
-    print(len(ongoing_game.player1.pieces))
     return json.jsonify(board=ongoing_game.get_positions())
 
 
