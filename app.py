@@ -4,7 +4,7 @@ from flask_cors import CORS
 import json
 from flask import request, json
 import game
-from game import Game, update_turn, update_board, infer_move, \
+from game import Game, update_turn, infer_move, \
     create_piece_per_conf, \
     get_positions, get_possible_moves
 

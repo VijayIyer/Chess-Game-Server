@@ -10,8 +10,8 @@ import logging
 
 # logging.basicConfig(filename='test.log',level=logging.DEBUG)
 turn = 0
-timer1 = 300 #5 minutes
-timer2 = 300 #5 minutes
+timer1 = 300  # 5 minutes
+timer2 = 300  # 5 minutes
 
 
 def update_turn(turn):
@@ -120,37 +120,6 @@ def infer_move(move_notation, turn):
 
 
 
-
-def update_board(move, cur_pieces, opp_pieces, board_map, turn):
-    if turn == 0:
-        own, oppos = 1, -1
-    else:
-        own, oppos = -1, 1
-    curr_row, curr_col = move.current_pos
-    new_row, new_col = move.new_pos
-    board_map[curr_row, curr_col] = 0
-    board_map[new_row, new_col] = own
-    for piece in cur_pieces:
-        if piece.current_pos == (curr_row, curr_col):
-            piece.current_pos = new_row, new_col
-            if type(piece) == pawn and not piece.has_moved \
-                    and move.new_pos == (curr_row + 2 * oppos, curr_col):
-                piece.can_be_enpassanted = True
-                # print("{}: {},{} can be en_passanted".format(own, new_row, new_col))
-            piece.has_moved = True
-        elif type(piece) == pawn:
-            piece.can_be_enpassanted = False
-    if move.is_capture:
-        for opp_piece in opp_pieces:
-            if move.is_enpassant:
-                # print("this move is en passant")
-                if opp_piece.current_pos == (new_row - oppos, new_col):
-                    opp_pieces.remove(opp_piece)
-                    break
-            if opp_piece.current_pos == (new_row, new_col):
-                opp_pieces.remove(opp_piece)
-                break
-
 def create_piece_per_conf(piece_pos):
     piece_row, piece_col = 8 - int(piece_pos[1]), \
                            8 - (104 - ord(piece_pos[0])) - 1
@@ -195,7 +164,7 @@ def get_king_pos(pieces):
         if type(pc) == king:
             return pc.current_pos
 
-    return (7, 4) # default white king pos
+    return (7, 4)  # default white king pos
 
 
 class Game:
@@ -246,9 +215,11 @@ class Game:
                 break
         if piece_to_be_captured is None: return False
         return piece_to_be_captured.can_be_enpassanted
-    def is_move_valid(self, move, cur_pieces, opp_pieces):
+
+    def get_valid_move(self, move, cur_pieces, opp_pieces):
         is_valid = True
-        # change to selection logic
+
+        # change 'type' call to selection logic
         valid_pieces = [pc for pc in cur_pieces if type(pc) == move.piece_type]
         candidate_moves = []
         for piece in valid_pieces:
@@ -257,17 +228,13 @@ class Game:
             possible_moves = piece.get_valid_moves(self.board_map)
 
             for possible_move in possible_moves:
-                
-                if possible_move.is_enpassant:
-
-                    if not self.is_enpassant_valid(possible_move, opp_pieces):
-                        continue
-
                 if move == possible_move:
-                    # print(move.current_pos)
+                    if possible_move.is_enpassant:
+                        if not self.is_enpassant_valid(possible_move, opp_pieces):
+                            continue
                     candidate_moves.append(possible_move)
-        #  for move in candidate_moves:
-        # logging.debug('{}'.format(move.new_pos))
+
+        # if no ambiguity
         if len(candidate_moves) == 1:
             selected_move = move
             selected_move.current_pos = candidate_moves[0].current_pos
@@ -275,10 +242,61 @@ class Game:
                 selected_move.is_enpassant = True
             return selected_move
         else:
-            # logging.debug('these are the final candidate moves')
-            # for move in candidate_moves:
-            # logging.debug(move.current_pos, move.new_pos)
             return None
+
+    def update_board(self, move, cur_pieces, opp_pieces):
+        if self.turn == 0:
+            own, oppos = 1, -1
+        else:
+            own, oppos = -1, 1
+        curr_row, curr_col = move.current_pos
+        new_row, new_col = move.new_pos
+        self.board_map[curr_row, curr_col] = 0
+        self.board_map[new_row, new_col] = own
+        for piece in cur_pieces:
+            if piece.current_pos == (curr_row, curr_col):
+                piece.current_pos = new_row, new_col
+                if type(piece) == pawn and not piece.has_moved \
+                        and move.new_pos == (curr_row + 2 * oppos, curr_col):
+                    piece.can_be_enpassanted = True
+                    # print("{}: {},{} can be en_passanted".format(own, new_row, new_col))
+                piece.has_moved = True
+            elif type(piece) == pawn:
+                piece.can_be_enpassanted = False
+        if move.is_capture:
+            for opp_piece in opp_pieces:
+                if move.is_enpassant:
+                    # print("this move is en passant")
+                    if opp_piece.current_pos == (new_row - oppos, new_col):
+                        opp_pieces.remove(opp_piece)
+                        break
+                if move.is_castling:
+                    print("this is a castling move")
+                if move.is_longcastling:
+                    print("this is a long castling move")
+                if opp_piece.current_pos == (new_row, new_col):
+                    opp_pieces.remove(opp_piece)
+                    break
+
+    def check_king_in_check(self, move, cur_pieces, opp_pieces):
+        possible_game = copy.deepcopy(self)
+        possible_game.turn = self.turn
+        if possible_game.turn == 0:
+            cur_pieces = possible_game.player1.pieces
+            opp_pieces = possible_game.player2.pieces
+        else:
+            cur_pieces = possible_game.player2.pieces
+            opp_pieces = possible_game.player1.pieces
+        curr_king_pos = get_king_pos(cur_pieces)
+        possible_game.update_board(move, cur_pieces, opp_pieces)
+        opp_squares_under_attack = possible_game.get_squares_under_attack(opp_pieces)
+        if curr_king_pos in opp_squares_under_attack:
+            print("invalid move since it puts self in check")
+            # revert board here
+            return True
+        else:
+            return False
+
     def make_move(self, move_notation):
         if self.turn == 0:
             cur_pieces = self.player1.pieces
@@ -293,30 +311,24 @@ class Game:
             opp_player = self.player1
         # move_notation = input("\nenter your move:")
         move = infer_move(move_notation, self.turn)
-        selected_move = self.is_move_valid(move, cur_pieces, opp_pieces)
+        selected_move = self.get_valid_move(move, cur_pieces, opp_pieces)
 
-        if selected_move is not None:
-
-            update_board(selected_move, cur_pieces, opp_pieces, self.board_map, self.turn)
+        if selected_move is not None and not self.check_king_in_check(selected_move, cur_pieces, opp_pieces):
+            self.update_board(selected_move, cur_pieces, opp_pieces)
             cur_squares_under_attack = self.get_squares_under_attack(cur_pieces)
-            opp_squares_under_attack = self.get_squares_under_attack(opp_pieces)
             opp_king_pos = get_king_pos(opp_pieces)
-            curr_king_pos = get_king_pos(cur_pieces)
             if opp_king_pos in cur_squares_under_attack:
                 opp_player.in_check = True
                 print("{} is in check".format(opp_player.color))
-            if curr_king_pos in opp_squares_under_attack:
-                print("invalid move since it puts self in check")
-                self.is_invalid_move = True
-                # revert board here
-                return
+            else:
+                opp_player.in_check = False
             self.turn = update_turn(self.turn)
             self.is_invalid_move = False
             if self.turn == 1:
                 # next turn in notational terms
                 self.current_game += " {}.".format(self.move_no)
                 self.move_no += 1
-            self.current_game += move_notation + " "
+            self.current_game += move_notation + ("+" if opp_player.in_check else "") + " "
         else:
             print("move invalid")
             self.is_invalid_move = True
