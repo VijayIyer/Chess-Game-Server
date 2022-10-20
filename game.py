@@ -280,7 +280,7 @@ class Game:
             possible_moves = piece.get_valid_moves(self.board_map)
 
             for possible_move in possible_moves:
-                if type(piece) == king and not self.is_king_move_valid(move, cur_pieces):
+                if type(piece) == king and not self.is_king_move_valid(move, opp_pieces):
                     continue
                 if move == possible_move:
                     if possible_move.is_enpassant:
