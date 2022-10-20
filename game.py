@@ -211,7 +211,7 @@ class Game:
         if piece_to_be_captured is None: return False
         return piece_to_be_captured.can_be_enpassanted
 
-    def is_castling_valid(self, move, cur_pieces):
+    def is_castling_valid(self, move, cur_pieces, opp_pieces):
         cur_king = list(filter(lambda pc: type(pc) == king, cur_pieces))[0]
         rooks = list(filter(lambda pc: type(pc) == rook, cur_pieces))
         cur_rook = list(filter(lambda pc: pc.current_pos == (cur_king.current_pos[0],
@@ -224,9 +224,16 @@ class Game:
         if self.board_map[move.current_pos[0], move.current_pos[1] + 1] != 0 \
                 or self.board_map[move.current_pos[0], move.current_pos[1] + 2] != 0:
             return False
+
+        castling_squares = [(move.current_pos[0], move.current_pos[1]),
+                            (move.current_pos[0], move.current_pos[1] + 1),
+                            (move.current_pos[0], move.current_pos[1] + 2)]
+        squares_under_attack = self.get_squares_under_attack(opp_pieces)
+        if any(x in squares_under_attack for x in castling_squares):
+            return False
         return True
 
-    def is_longcastling_valid(self, move, cur_pieces):
+    def is_longcastling_valid(self, move, cur_pieces, opp_pieces):
         cur_king = list(filter(lambda pc: type(pc) == king, cur_pieces))[0]
         rooks = list(filter(lambda pc: type(pc) == rook, cur_pieces))
         cur_rook = list(filter(lambda pc: pc.current_pos == (cur_king.current_pos[0],
@@ -239,6 +246,25 @@ class Game:
         if self.board_map[move.current_pos[0], move.current_pos[1] - 1] != 0 \
                 or self.board_map[move.current_pos[0], move.current_pos[1] - 2] != 0 \
                 or self.board_map[move.current_pos[0], move.current_pos[1] - 3] != 0:
+            return False
+        squares_under_attack = self.get_squares_under_attack(opp_pieces)
+        print(squares_under_attack)
+        print('\n')
+
+        castling_squares = [(move.current_pos[0], move.current_pos[1]),
+                            (move.current_pos[0], move.current_pos[1] - 1),
+                            (move.current_pos[0], move.current_pos[1] - 2),
+                            (move.current_pos[0], move.current_pos[1] - 3)]
+        print(castling_squares)
+        if any(x in squares_under_attack for x in castling_squares):
+            return False
+        return True
+
+    def is_king_move_valid(self, move, opp_pieces):
+        print(move.new_pos)
+        print('\n')
+        print(self.get_squares_under_attack(opp_pieces))
+        if move.new_pos in self.get_squares_under_attack(opp_pieces):
             return False
         return True
 
@@ -254,15 +280,17 @@ class Game:
             possible_moves = piece.get_valid_moves(self.board_map)
 
             for possible_move in possible_moves:
+                if type(piece) == king and not self.is_king_move_valid(move, cur_pieces):
+                    continue
                 if move == possible_move:
                     if possible_move.is_enpassant:
                         if not self.is_enpassant_valid(possible_move, opp_pieces):
                             continue
                     if possible_move.is_castling:
-                        if not self.is_castling_valid(possible_move, cur_pieces):
+                        if not self.is_castling_valid(possible_move, cur_pieces, opp_pieces):
                             continue
                     if possible_move.is_longcastling:
-                        if not self.is_longcastling_valid(possible_move, cur_pieces):
+                        if not self.is_longcastling_valid(possible_move, cur_pieces, opp_pieces):
                             continue
                     candidate_moves.append(possible_move)
 

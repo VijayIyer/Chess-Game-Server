@@ -382,7 +382,7 @@ class knight(piece):
 
     def add_move(self, board_map, new_pos):
         row, col = new_pos[0], new_pos[1]
-        if (0 < row < board_map.shape[0]) and (0 < col < board_map.shape[1]) \
+        if (0 <= row < board_map.shape[0]) and (0 <= col < board_map.shape[1]) \
                 and board_map[row, col] != self.own:
             move = self.initialize_knight_move(board_map)
             move.new_pos = (row, col)
@@ -464,7 +464,7 @@ class bishop(piece):
             else:
                 break
         i = 1
-        while row - i > 0 and col - i > 0:
+        while row - i >= 0 and col - i >= 0:
             if board_map[row - i, col - i] != self.own:
                 move = self.add_move(board_map, (row - i, col - i))
                 if move is not None:
