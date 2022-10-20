@@ -35,11 +35,12 @@ class Move:
             # ans = ans & (self.is_enpassant == other.is_enpassant)
             ans = ans & (self.is_capture == other.is_capture)
         if not ans:
-            print('{}:{}\n{}:{}\n{}:{}\n{}:{}\n{}:{}\n{}:{}\n'
-                  .format(self.new_pos, other.new_pos,
-                          self.current_pos, other.current_pos,
-                          self.is_castling, other.is_castling,
-                          self.piece_type, other.piece_type,
-                          self.is_longcastling, other.is_longcastling,
-                          self.is_capture, other.is_capture))
+            pass
+            # print('{}:{}\n{}:{}\n{}:{}\n{}:{}\n{}:{}\n{}:{}\n'
+            #       .format(self.new_pos, other.new_pos,
+            #               self.current_pos, other.current_pos,
+            #               self.is_castling, other.is_castling,
+            #               self.piece_type, other.piece_type,
+            #               self.is_longcastling, other.is_longcastling,
+            #               self.is_capture, other.is_capture))
         return ans

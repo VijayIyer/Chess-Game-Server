@@ -57,7 +57,6 @@ def infer_move(move_notation, turn):
     # endregion
     promoted_piece = None
     if m_dict['LongCastle'] is not None:
-        print('long castle')
         move.is_longcastling = True
         move.piece_type = king
         if turn == 0:
@@ -71,19 +70,19 @@ def infer_move(move_notation, turn):
             return move
 
     if m_dict['Castle'] is not None:
-        # print('castling move')
+
         move.piece_type = king
         move.is_castling = True
         if turn == 0:
             move.current_pos = (7, 4)
             move.new_pos = (7, 6)
-            # print('{}:{}'.format(move.current_pos, move.new_pos))
+
             return move
 
         elif turn == 1:
             move.current_pos = (0, 4)
             move.new_pos = (0, 6)
-            # print('{}:{}'.format(move.current_pos , move.new_pos))
+
             return move
 
     # region determining prev column
@@ -119,7 +118,6 @@ def infer_move(move_notation, turn):
     return move
 
 
-
 def create_piece_per_conf(piece_pos):
     piece_row, piece_col = 8 - int(piece_pos[1]), \
                            8 - (104 - ord(piece_pos[0])) - 1
@@ -144,8 +142,6 @@ def create_piece_per_conf(piece_pos):
 
 
 def get_positions(pieces):
-    print(len(pieces))
-    request = dict()
     positions = []
     for piece in pieces:
         pos = ""
@@ -155,7 +151,6 @@ def get_positions(pieces):
         pos += ("W" if piece.own == 1 else "B")
         pos += str(piece)
         positions.append(pos)
-    print(positions)
     return positions
 
 
@@ -216,6 +211,21 @@ class Game:
         if piece_to_be_captured is None: return False
         return piece_to_be_captured.can_be_enpassanted
 
+    def is_castling_valid(self, move, cur_pieces):
+        cur_king = list(filter(lambda pc: type(pc) == king, cur_pieces))[0]
+        rooks = list(filter(lambda pc: type(pc) == rook, cur_pieces))
+        cur_rook = list(filter(lambda pc: pc.current_pos == (cur_king.current_pos[0],
+                                                             cur_king.current_pos[1] + 3),
+                               rooks))[0]
+        if cur_king.has_moved:
+            return False
+        if cur_rook.has_moved:
+            return False
+        return True
+
+    def is_longcastling_valid(self, move, cur_pieces):
+        return True
+
     def get_valid_move(self, move, cur_pieces, opp_pieces):
         is_valid = True
 
@@ -232,6 +242,12 @@ class Game:
                     if possible_move.is_enpassant:
                         if not self.is_enpassant_valid(possible_move, opp_pieces):
                             continue
+                    if possible_move.is_castling:
+                        if not self.is_castling_valid(possible_move, cur_pieces):
+                            continue
+                    if possible_move.is_longcastling:
+                        if not self.is_longcastling_valid(possible_move, cur_pieces):
+                            continue
                     candidate_moves.append(possible_move)
 
         # if no ambiguity
@@ -245,6 +261,7 @@ class Game:
             return None
 
     def update_board(self, move, cur_pieces, opp_pieces):
+        print("updated board called")
         if self.turn == 0:
             own, oppos = 1, -1
         else:
@@ -259,21 +276,32 @@ class Game:
                 if type(piece) == pawn and not piece.has_moved \
                         and move.new_pos == (curr_row + 2 * oppos, curr_col):
                     piece.can_be_enpassanted = True
-                    # print("{}: {},{} can be en_passanted".format(own, new_row, new_col))
+
                 piece.has_moved = True
             elif type(piece) == pawn:
                 piece.can_be_enpassanted = False
+        if move.is_castling:
+
+            for piece in cur_pieces:
+                if type(piece) == rook:
+                    print('{}:{}'.format((new_row, new_col), piece.current_pos))
+                    if piece.current_pos == (curr_row, curr_col + 3):
+                        piece.current_pos = new_row, new_col - 1
+        if move.is_longcastling:
+
+            for piece in cur_pieces:
+                if type(piece) == rook:
+                    print('{}:{}'.format((new_row, new_col), piece.current_pos))
+                    if piece.current_pos == (curr_row, curr_col - 4):
+                        piece.current_pos = new_row, new_col + 1
+
         if move.is_capture:
             for opp_piece in opp_pieces:
                 if move.is_enpassant:
-                    # print("this move is en passant")
+
                     if opp_piece.current_pos == (new_row - oppos, new_col):
                         opp_pieces.remove(opp_piece)
                         break
-                if move.is_castling:
-                    print("this is a castling move")
-                if move.is_longcastling:
-                    print("this is a long castling move")
                 if opp_piece.current_pos == (new_row, new_col):
                     opp_pieces.remove(opp_piece)
                     break
@@ -356,13 +384,3 @@ class Player:
 
     def add_piece(self, piece):
         self.pieces.append(piece)
-
-
-if __name__ == "__main__":
-    pass
-    # print(sys.argv[1])
-    # board_conf_file = sys.argv[1]
-    # with open(board_conf_file, 'r') as f:
-    #    board_conf = f.readlines()
-    # player1, player2, board_map = initialize_players(board_conf)
-    # start_game(player1, player2, board_map)

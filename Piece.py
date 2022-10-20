@@ -79,7 +79,6 @@ class rook(piece):
 
     def get_valid_moves(self, board_map):
         row, col = self.current_pos[0], self.current_pos[1]
-        print('current pos is {},{}'.format(row, col))
         moves = []
         i = 1
         while col + i < board_map.shape[1]:
@@ -126,9 +125,7 @@ class rook(piece):
                 i += 1
             else:
                 break
-        print(len(moves))
-        for move in moves:
-            print(move.new_pos)
+
         return moves
 
     def initialize_rook_move(self, board_map):
@@ -161,7 +158,7 @@ class queen(piece):
 
     def get_valid_moves(self, board_map):
         row, col = self.current_pos[0], self.current_pos[1]
-        print('current pos is {},{}'.format(row, col))
+
         moves = []
 
         i = 1
@@ -254,9 +251,8 @@ class queen(piece):
                 i += 1
             else:
                 break
-        print(len(moves))
-        for move in moves:
-            print(move.new_pos)
+
+
         return moves
 
     def add_move(self, board_map, new_pos):
@@ -444,7 +440,6 @@ class bishop(piece):
 
     def get_valid_moves(self, board_map):
         row, col = self.current_pos[0], self.current_pos[1]
-        print('current pos is {},{}'.format(row, col))
         moves = []
         i = 1
         while col + i < board_map.shape[1] and row + i < board_map.shape[0]:
@@ -491,9 +486,7 @@ class bishop(piece):
                 i += 1
             else:
                 break
-        print(len(moves))
-        for move in moves:
-            print(move.new_pos)
+
         return moves
 
     def initialize_bishop_move(self, board_map):
