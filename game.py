@@ -221,6 +221,9 @@ class Game:
             return False
         if cur_rook.has_moved:
             return False
+        if self.board_map[move.current_pos[0], move.current_pos[1] + 1] != 0 \
+                or self.board_map[move.current_pos[0], move.current_pos[1] + 2] != 0:
+            return False
         return True
 
     def is_longcastling_valid(self, move, cur_pieces):
@@ -232,6 +235,10 @@ class Game:
         if cur_king.has_moved:
             return False
         if cur_rook.has_moved:
+            return False
+        if self.board_map[move.current_pos[0], move.current_pos[1] - 1] != 0 \
+                or self.board_map[move.current_pos[0], move.current_pos[1] - 2] != 0 \
+                or self.board_map[move.current_pos[0], move.current_pos[1] - 3] != 0:
             return False
         return True
 
