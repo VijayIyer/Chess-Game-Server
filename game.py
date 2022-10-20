@@ -224,6 +224,15 @@ class Game:
         return True
 
     def is_longcastling_valid(self, move, cur_pieces):
+        cur_king = list(filter(lambda pc: type(pc) == king, cur_pieces))[0]
+        rooks = list(filter(lambda pc: type(pc) == rook, cur_pieces))
+        cur_rook = list(filter(lambda pc: pc.current_pos == (cur_king.current_pos[0],
+                                                             cur_king.current_pos[1] - 4),
+                               rooks))[0]
+        if cur_king.has_moved:
+            return False
+        if cur_rook.has_moved:
+            return False
         return True
 
     def get_valid_move(self, move, cur_pieces, opp_pieces):
