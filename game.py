@@ -1,4 +1,5 @@
 import initializations as init
+from typing import List, Tuple
 from Piece import pawn, rook, queen, knight, bishop, king
 import numpy as np
 from moves import Move
@@ -14,8 +15,16 @@ timer1 = 300  # 5 minutes
 timer2 = 300  # 5 minutes
 
 
-def update_turn(turn):
-    return 1 if turn == 0 else 0
+class Player:
+    """Contains collection of pieces of both sides"""
+
+    def __init__(self, color):
+        self.color = color
+        self.pieces = []
+        self.in_check = False
+
+    def add_piece(self, piece):
+        self.pieces.append(piece)
 
 
 def get_possible_moves(cur_pieces, board_map):
@@ -183,9 +192,12 @@ class Game:
                 self.player2.add_piece(piece)
                 self.board_map[piece.current_pos[0], piece.current_pos[1]] = -1
 
-    def get_squares_under_attack(self, valid_pieces):
+    def update_turn(self):
+        return 1 if self.turn == 0 else 0
+
+    def get_squares_under_attack(self, player: Player) -> List[Tuple[int, int]]:
         squares_under_attack = []
-        for pc in valid_pieces:
+        for pc in player.pieces:
             for mv in pc.get_valid_moves(self.board_map):
                 if mv.new_pos not in squares_under_attack:
                     squares_under_attack.append(mv.new_pos)
@@ -354,14 +366,14 @@ class Game:
         possible_game = copy.deepcopy(self)
         possible_game.turn = self.turn
         if possible_game.turn == 0:
-            cur_pieces = possible_game.player1.pieces
-            opp_pieces = possible_game.player2.pieces
+            cur_player = possible_game.player1
+            opp_player = possible_game.player2
         else:
-            cur_pieces = possible_game.player2.pieces
-            opp_pieces = possible_game.player1.pieces
-        curr_king_pos = get_king_pos(cur_pieces)
-        possible_game.update_board(move, cur_pieces, opp_pieces)
-        opp_squares_under_attack = possible_game.get_squares_under_attack(opp_pieces)
+            cur_player = possible_game.player2
+            opp_player = possible_game.player1
+        curr_king_pos = get_king_pos(cur_player.pieces)
+        possible_game.update_board(move, cur_player.pieces, opp_player.pieces)
+        opp_squares_under_attack = possible_game.get_squares_under_attack(opp_player)
         if curr_king_pos in opp_squares_under_attack:
             print("invalid move since it puts self in check")
             # revert board here
@@ -370,31 +382,32 @@ class Game:
             return False
 
     def make_move(self, move_notation):
+        # switch players based on turn
         if self.turn == 0:
-            cur_pieces = self.player1.pieces
-            opp_pieces = self.player2.pieces
             current_player = self.player1
             opp_player = self.player2
 
         else:
-            cur_pieces = self.player2.pieces
-            opp_pieces = self.player1.pieces
             current_player = self.player2
             opp_player = self.player1
         # move_notation = input("\nenter your move:")
         move = infer_move(move_notation, self.turn)
-        selected_move = self.get_valid_move(move, cur_pieces, opp_pieces)
+        selected_move = self.get_valid_move(move, current_player.pieces, opp_player.pieces)
 
-        if selected_move is not None and not self.check_king_in_check(selected_move, cur_pieces, opp_pieces):
-            self.update_board(selected_move, cur_pieces, opp_pieces)
-            cur_squares_under_attack = self.get_squares_under_attack(cur_pieces)
-            opp_king_pos = get_king_pos(opp_pieces)
+        # if move is valid, take action
+        if selected_move is not None and not self.check_king_in_check(selected_move, current_player.pieces,
+                                                                      opp_player.pieces):
+            # actual board update
+            self.update_board(selected_move, current_player.pieces, opp_player.pieces)
+            # recording if king is in check
+            cur_squares_under_attack = self.get_squares_under_attack(current_player)
+            opp_king_pos = get_king_pos(opp_player.pieces)
             if opp_king_pos in cur_squares_under_attack:
                 opp_player.in_check = True
                 print("{} is in check".format(opp_player.color))
             else:
                 opp_player.in_check = False
-            self.turn = update_turn(self.turn)
+            self.turn = self.update_turn()
             self.is_invalid_move = False
             if self.turn == 1:
                 # next turn in notational terms
@@ -416,15 +429,3 @@ class Game:
 
     def get_positions(self):
         return get_positions(self.player1.pieces + self.player2.pieces)
-
-
-class Player:
-    """Contains collection of pieces of both sides"""
-
-    def __init__(self, color):
-        self.color = color
-        self.pieces = []
-        self.in_check = False
-
-    def add_piece(self, piece):
-        self.pieces.append(piece)
