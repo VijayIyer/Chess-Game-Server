@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from moves import Move
-
+EMPTY = 0
 
 class piece:
     def __init__(self, color, current_pos):
@@ -9,6 +9,7 @@ class piece:
             self.own, self.oppos = 1, -1
         else:
             self.own, self.oppos = -1, 1
+
         self.current_pos = current_pos
 
     def __str__(self):
@@ -33,15 +34,15 @@ class pawn(piece):
 
         ## Promoted piece logic left
 
-        if not board_map[row + self.oppos, col] == self.oppos:
+        if board_map[row + self.oppos, col] == EMPTY:
             move = self.initialize_pawn_move(board_map)
             move.new_pos = (row + self.oppos, col)
             moves.append(move)
-        if not board_map[row + 2 * self.oppos, col] == self.oppos \
-                and not self.has_moved:
-            move = self.initialize_pawn_move(board_map)
-            move.new_pos = (row + 2 * self.oppos, col)
-            moves.append(move)
+            if not board_map[row + 2 * self.oppos, col] == self.oppos \
+                    and not self.has_moved:
+                move = self.initialize_pawn_move(board_map)
+                move.new_pos = (row + 2 * self.oppos, col)
+                moves.append(move)
         if col + 1 < board_map.shape[1] \
                 and (board_map[row + self.oppos, col + 1] == self.oppos
                      or board_map[row, col + 1] == self.oppos):
@@ -53,7 +54,7 @@ class pawn(piece):
             moves.append(move)
 
         if col - 1 >= 0 \
-                and (board_map[row + self.oppos, col - 1] == self.oppos \
+                and (board_map[row + self.oppos, col - 1] == self.oppos
                      or board_map[row, col - 1] == self.oppos):
             move = self.initialize_pawn_move(board_map)
             move.new_pos = (row + self.oppos, col - 1)

@@ -207,11 +207,16 @@ class Game:
         return 1 if self.turn == 0 else 0
 
     def get_squares_under_attack(self, player: Player) -> List[Tuple[int, int]]:
-        squares_under_attack = []
+        squares_under_attack:List[Tuple[int, int]] = []
         for pc in player.pieces:
-            for mv in pc.get_valid_moves(self.board_map):
-                if mv.new_pos not in squares_under_attack:
-                    squares_under_attack.append(mv.new_pos)
+            if isinstance(pc, pawn):
+                for mv in pc.get_valid_moves(self.board_map):
+                    if mv.is_capture:
+                        squares_under_attack.append(mv.new_pos)
+            else:
+                for mv in pc.get_valid_moves(self.board_map):
+                    if mv.new_pos not in squares_under_attack:
+                        squares_under_attack.append(mv.new_pos)
         return squares_under_attack
 
     def is_enpassant_valid(self, possible_move, opp_pieces):
@@ -234,7 +239,9 @@ class Game:
         if piece_to_be_captured is None: return False
         return piece_to_be_captured.can_be_enpassanted
 
-    def is_castling_valid(self, move, cur_pieces, opp_pieces):
+    def is_castling_valid(self, move, cur_player: Player, opp_player: Player) -> bool:
+        cur_pieces = cur_player.pieces
+        opp_pieces = opp_player.pieces
         cur_king = list(filter(lambda pc: type(pc) == king, cur_pieces))[0]
         rooks = list(filter(lambda pc: type(pc) == rook, cur_pieces))
         cur_rook = list(filter(lambda pc: pc.current_pos == (cur_king.current_pos[0],
@@ -251,12 +258,14 @@ class Game:
         castling_squares = [(move.current_pos[0], move.current_pos[1]),
                             (move.current_pos[0], move.current_pos[1] + 1),
                             (move.current_pos[0], move.current_pos[1] + 2)]
-        squares_under_attack = self.get_squares_under_attack(opp_pieces)
+        squares_under_attack = self.get_squares_under_attack(opp_player)
         if any(x in squares_under_attack for x in castling_squares):
             return False
         return True
 
-    def is_longcastling_valid(self, move, cur_pieces, opp_pieces):
+    def is_longcastling_valid(self, move: Move, cur_player: Player, opp_player: Player) -> bool:
+        cur_pieces = cur_player.pieces
+        opp_pieces = opp_player.pieces
         cur_king = list(filter(lambda pc: type(pc) == king, cur_pieces))[0]
         rooks = list(filter(lambda pc: type(pc) == rook, cur_pieces))
         cur_rook = list(filter(lambda pc: pc.current_pos == (cur_king.current_pos[0],
@@ -270,32 +279,27 @@ class Game:
                 or self.board_map[move.current_pos[0], move.current_pos[1] - 2] != 0 \
                 or self.board_map[move.current_pos[0], move.current_pos[1] - 3] != 0:
             return False
-        squares_under_attack = self.get_squares_under_attack(opp_pieces)
-        print(squares_under_attack)
-        print('\n')
+        squares_under_attack = self.get_squares_under_attack(opp_player)
 
         castling_squares = [(move.current_pos[0], move.current_pos[1]),
                             (move.current_pos[0], move.current_pos[1] - 1),
                             (move.current_pos[0], move.current_pos[1] - 2),
                             (move.current_pos[0], move.current_pos[1] - 3)]
-        print(castling_squares)
         if any(x in squares_under_attack for x in castling_squares):
             return False
         return True
 
-    def is_king_move_valid(self, move, opp_pieces):
-        print(move.new_pos)
-        print('\n')
-        print(self.get_squares_under_attack(opp_pieces))
-        if move.new_pos in self.get_squares_under_attack(opp_pieces):
+    def is_king_move_valid(self, move: Move, opp_player: Player) -> bool:
+        squares_under_attack = self.get_squares_under_attack(opp_player)
+        if move.new_pos in squares_under_attack:
             return False
         return True
 
-    def get_valid_move(self, move, cur_pieces, opp_pieces):
-        is_valid = True
-
+    def get_valid_move(self, move: Move, cur_player: Player, opp_player: Player) -> Move or None:
         # change 'type' call to selection logic
-        valid_pieces = [pc for pc in cur_pieces if type(pc) == move.piece_type]
+        cur_pieces = cur_player.pieces
+        opp_pieces = opp_player.pieces
+        valid_pieces = [pc for pc in cur_pieces if isinstance(pc, move.piece_type)]
         candidate_moves = []
         for piece in valid_pieces:
 
@@ -303,17 +307,18 @@ class Game:
             possible_moves = piece.get_valid_moves(self.board_map)
 
             for possible_move in possible_moves:
-                if type(piece) == king and not self.is_king_move_valid(move, opp_pieces):
+                if isinstance(piece, king) and not self.is_king_move_valid(move, opp_player):
                     continue
                 if move == possible_move:
+
                     if possible_move.is_enpassant:
                         if not self.is_enpassant_valid(possible_move, opp_pieces):
                             continue
                     if possible_move.is_castling:
-                        if not self.is_castling_valid(possible_move, cur_pieces, opp_pieces):
+                        if not self.is_castling_valid(possible_move, cur_player, opp_player):
                             continue
                     if possible_move.is_longcastling:
-                        if not self.is_longcastling_valid(possible_move, cur_pieces, opp_pieces):
+                        if not self.is_longcastling_valid(possible_move, cur_player, opp_player):
                             continue
                     candidate_moves.append(possible_move)
 
@@ -354,6 +359,7 @@ class Game:
                     print('{}:{}'.format((new_row, new_col), piece.current_pos))
                     if piece.current_pos == (curr_row, curr_col + 3):
                         piece.current_pos = new_row, new_col - 1
+                        break
         if move.is_longcastling:
 
             for piece in cur_pieces:
@@ -361,7 +367,7 @@ class Game:
                     print('{}:{}'.format((new_row, new_col), piece.current_pos))
                     if piece.current_pos == (curr_row, curr_col - 4):
                         piece.current_pos = new_row, new_col + 1
-
+                        break
         if move.is_capture:
             for opp_piece in opp_pieces:
                 if move.is_enpassant:
@@ -373,7 +379,7 @@ class Game:
                     opp_pieces.remove(opp_piece)
                     break
 
-    def check_king_in_check(self, move, cur_pieces, opp_pieces):
+    def check_king_in_check(self, move):
         possible_game = copy.deepcopy(self)
         possible_game.turn = self.turn
         if possible_game.turn == 0:
@@ -382,11 +388,13 @@ class Game:
         else:
             cur_player = possible_game.player2
             opp_player = possible_game.player1
-        curr_king_pos = self.get_king_pos(cur_player)
         possible_game.update_board(move, cur_player.pieces, opp_player.pieces)
+        curr_king_pos = possible_game.get_king_pos(cur_player)
         opp_squares_under_attack = possible_game.get_squares_under_attack(opp_player)
         if curr_king_pos in opp_squares_under_attack:
             print("invalid move since it puts self in check")
+            print('king is currently at {}'.format(curr_king_pos))
+            print('squares under attack: {}'.format(opp_squares_under_attack))
             # revert board here
             return True
         else:
@@ -403,11 +411,10 @@ class Game:
             opp_player = self.player1
         # move_notation = input("\nenter your move:")
         move = infer_move(move_notation, self.turn)
-        selected_move = self.get_valid_move(move, current_player.pieces, opp_player.pieces)
+        selected_move = self.get_valid_move(move, current_player, opp_player)
 
         # if move is valid, take action
-        if selected_move is not None and not self.check_king_in_check(selected_move, current_player.pieces,
-                                                                      opp_player.pieces):
+        if selected_move is not None and not self.check_king_in_check(selected_move):
             # actual board update
             self.update_board(selected_move, current_player.pieces, opp_player.pieces)
             # recording if king is in check
