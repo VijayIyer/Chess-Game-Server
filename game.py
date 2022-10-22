@@ -31,7 +31,7 @@ def get_possible_moves(cur_pieces, board_map):
     return [piece.get_valid_moves() for piece in cur_pieces]
 
 
-def infer_move(move_notation, turn):
+def infer_move(move_notation: str, turn: int) -> Move:
     '''
     work on this regex
     (?'piece'[K|N|B|R|Q]?)(?'amb'[a-h1-8]?)(?'capture'[x]?)(?'newcol'[a-h]{1})(?'newrow'[1-8]{1})(?'checkormate'[+|#]*)$
@@ -128,6 +128,9 @@ def infer_move(move_notation, turn):
 
 
 def create_piece_per_conf(piece_pos):
+    """
+    Creates piece based on notation. e.g. Wp is a white pawn, WB is a white bishop
+    """
     piece_row, piece_col = 8 - int(piece_pos[1]), \
                            8 - (104 - ord(piece_pos[0])) - 1
     if piece_pos[3] == "W":
@@ -151,6 +154,10 @@ def create_piece_per_conf(piece_pos):
 
 
 def get_positions(pieces):
+    """
+    returns a list of strings with each string in the form of the configuration used to create the board
+     e.g. a1 Wp is white pawn on a1 square
+    """
     positions = []
     for piece in pieces:
         pos = ""
@@ -161,14 +168,6 @@ def get_positions(pieces):
         pos += str(piece)
         positions.append(pos)
     return positions
-
-
-def get_king_pos(pieces):
-    for pc in pieces:
-        if type(pc) == king:
-            return pc.current_pos
-
-    return (7, 4)  # default white king pos
 
 
 class Game:
@@ -191,6 +190,18 @@ class Game:
             else:
                 self.player2.add_piece(piece)
                 self.board_map[piece.current_pos[0], piece.current_pos[1]] = -1
+
+    @staticmethod
+    def get_king_pos(player: Player) -> Tuple[int, int]:
+
+        for pc in player.pieces:
+            if type(pc) == king:
+                return pc.current_pos
+        else:
+            if player.color == 'white':
+                return 7, 4  # default white king pos
+            else:
+                return 0, 4
 
     def update_turn(self):
         return 1 if self.turn == 0 else 0
@@ -371,7 +382,7 @@ class Game:
         else:
             cur_player = possible_game.player2
             opp_player = possible_game.player1
-        curr_king_pos = get_king_pos(cur_player.pieces)
+        curr_king_pos = self.get_king_pos(cur_player)
         possible_game.update_board(move, cur_player.pieces, opp_player.pieces)
         opp_squares_under_attack = possible_game.get_squares_under_attack(opp_player)
         if curr_king_pos in opp_squares_under_attack:
@@ -401,7 +412,7 @@ class Game:
             self.update_board(selected_move, current_player.pieces, opp_player.pieces)
             # recording if king is in check
             cur_squares_under_attack = self.get_squares_under_attack(current_player)
-            opp_king_pos = get_king_pos(opp_player.pieces)
+            opp_king_pos = self.get_king_pos(opp_player)
             if opp_king_pos in cur_squares_under_attack:
                 opp_player.in_check = True
                 print("{} is in check".format(opp_player.color))
