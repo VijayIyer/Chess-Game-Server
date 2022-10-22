@@ -38,7 +38,7 @@ class pawn(piece):
             move = self.initialize_pawn_move(board_map)
             move.new_pos = (row + self.oppos, col)
             moves.append(move)
-            if not board_map[row + 2 * self.oppos, col] == self.oppos \
+            if board_map[row + 2 * self.oppos, col] == EMPTY \
                     and not self.has_moved:
                 move = self.initialize_pawn_move(board_map)
                 move.new_pos = (row + 2 * self.oppos, col)
@@ -185,7 +185,7 @@ class queen(piece):
             else:
                 break
         i = 1
-        while row - i > 0 and col - i > 0:
+        while row - i > 0 and col - i >= 0:
             if board_map[row - i, col - i] != self.own:
                 move = self.add_move(board_map, (row - i, col - i))
                 if move is not None:
