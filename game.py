@@ -171,7 +171,8 @@ def get_positions(pieces):
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, game_id: int):
+        self.id = game_id
         self.player1 = Player("white")
         self.player2 = Player("black")
         self.board_map = np.zeros((8, 8))
@@ -207,7 +208,7 @@ class Game:
         return 1 if self.turn == 0 else 0
 
     def get_squares_under_attack(self, player: Player) -> List[Tuple[int, int]]:
-        squares_under_attack:List[Tuple[int, int]] = []
+        squares_under_attack: List[Tuple[int, int]] = []
         for pc in player.pieces:
             if isinstance(pc, pawn):
                 for mv in pc.get_valid_moves(self.board_map):
