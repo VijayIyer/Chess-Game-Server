@@ -21,3 +21,5 @@ Endpoint to mange a game of chess (with any front end that conforms to API)
 		move:'valid chess move string' e.g e4 / Nf3 / ...etc
 	}
 	RETURNS 200 if move is valid and updates the particular game instance
+
+### DEMO:
