@@ -1,7 +1,7 @@
 # Chess-Game-Server
 Endpoint to mange a game of chess (with any front end that conforms to API) implemented using Flask
 Intended so any frontend can make chess moves just knowing the API ( the format in which '/positions' endpoint returns data
-e.g. frontend repo 
+e.g. frontend repo https://github.com/VijayIyer/Chess_Javascript
 
 1. To start the end point
 
