@@ -10,7 +10,6 @@ import json
 import logging
 
 # logging.basicConfig(filename='test.log',level=logging.DEBUG)
-turn = 0
 timer1 = 300  # 5 minutes
 timer2 = 300  # 5 minutes
 
@@ -22,6 +21,7 @@ class Player:
         self.color = color
         self.pieces = []
         self.in_check = False
+        self.in_checkmate = False
 
     def add_piece(self, piece):
         self.pieces.append(piece)
@@ -36,8 +36,8 @@ def infer_move(move_notation: str, turn: int) -> Move:
     work on this regex
     (?'piece'[K|N|B|R|Q]?)(?'amb'[a-h1-8]?)(?'capture'[x]?)(?'newcol'[a-h]{1})(?'newrow'[1-8]{1})(?'checkormate'[+|#]*)$
 
-    :param move:
-    :param color:
+    :param move_notation: the move to be performed in valid chess string format
+    :param turn: integer denoting whether the player performing the move is white or black
     :return:
     '''
     pattern = re.compile('(?P<piece>[K|N|B|R|Q]?)(?P<amb>[a-h1-8]?)(?P<capture>[x]?)(?P<newcol>[a-h]{1})('
@@ -180,6 +180,7 @@ class Game:
         self.move_no = 1
         self.current_game = ""
         self.is_invalid_move = False
+        self.over = False
 
     def initialize_players(self, board_conf):
         pieces = [create_piece_per_conf(line) for line in board_conf]
@@ -237,7 +238,8 @@ class Game:
             if piece.current_pos == (cur_row, new_col):
                 piece_to_be_captured = piece
                 break
-        if piece_to_be_captured is None: return False
+        if piece_to_be_captured is None:
+            return False
         return piece_to_be_captured.can_be_enpassanted
 
     def is_castling_valid(self, move, cur_player: Player, opp_player: Player) -> bool:
@@ -380,15 +382,17 @@ class Game:
                     opp_pieces.remove(opp_piece)
                     break
 
-    def check_king_in_check(self, move):
+    def check_king_in_check(self, move: Move, turn: int):
         possible_game = copy.deepcopy(self)
-        possible_game.turn = self.turn
+        possible_game.turn = turn
         if possible_game.turn == 0:
             cur_player = possible_game.player1
             opp_player = possible_game.player2
-        else:
+        elif possible_game.turn == 1:
             cur_player = possible_game.player2
             opp_player = possible_game.player1
+        else:
+            return False
         possible_game.update_board(move, cur_player.pieces, opp_player.pieces)
         curr_king_pos = possible_game.get_king_pos(cur_player)
         opp_squares_under_attack = possible_game.get_squares_under_attack(opp_player)
@@ -415,13 +419,18 @@ class Game:
         selected_move = self.get_valid_move(move, current_player, opp_player)
 
         # if move is valid, take action
-        if selected_move is not None and not self.check_king_in_check(selected_move):
+        if selected_move is not None and not self.check_king_in_check(selected_move, self.turn):
             # actual board update
             self.update_board(selected_move, current_player.pieces, opp_player.pieces)
             # recording if king is in check
             cur_squares_under_attack = self.get_squares_under_attack(current_player)
             opp_king_pos = self.get_king_pos(opp_player)
             if opp_king_pos in cur_squares_under_attack:
+                # check for checkmate
+                opp_king: king = [piece for piece in opp_player.pieces if isinstance(piece, king)][0]
+                if all(self.check_king_in_check(move, 1 if self.turn == 0 else 0)
+                       for move in opp_king.get_valid_moves(self.board_map)):
+                    self.over = True
                 opp_player.in_check = True
                 print("{} is in check".format(opp_player.color))
             else:
