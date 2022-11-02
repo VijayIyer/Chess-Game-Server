@@ -426,10 +426,12 @@ class Game:
             cur_squares_under_attack = self.get_squares_under_attack(current_player)
             opp_king_pos = self.get_king_pos(opp_player)
             if opp_king_pos in cur_squares_under_attack:
+                print('opp king under attack')
                 # check for checkmate
                 opp_king: king = [piece for piece in opp_player.pieces if isinstance(piece, king)][0]
                 if all(self.check_king_in_check(move, 1 if self.turn == 0 else 0)
                        for move in opp_king.get_valid_moves(self.board_map)):
+                    print("game over!!")
                     self.over = True
                 opp_player.in_check = True
                 print("{} is in check".format(opp_player.color))

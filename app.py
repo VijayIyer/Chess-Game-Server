@@ -37,7 +37,7 @@ def make_move(game_id: int):
     move = request.get_json()['move']
     ongoing_game = find_game(game_id)
     if ongoing_game.over:
-        return make_response("game over", 200)
+        return make_response("game over", 400)
     ongoing_game.make_move(move)
     if ongoing_game.is_invalid_move:
         return make_response("invalid move", 400)

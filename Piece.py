@@ -185,7 +185,7 @@ class queen(piece):
             else:
                 break
         i = 1
-        while row - i > 0 and col - i >= 0:
+        while row - i >= 0 and col - i >= 0:
             if board_map[row - i, col - i] != self.own:
                 move = self.add_move(board_map, (row - i, col - i))
                 if move is not None:
